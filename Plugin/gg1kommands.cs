@@ -33,32 +33,47 @@ namespace Brigadier.Plugin
 
             // make argument nodes
             var top = Literal(name);
-            var args = new RequiredArgumentBuilder<string>[command.upperArgBound];
-            for (var i = 0; i < command.upperArgBound; i++)
+            if (command.hostOnly)
             {
-                args[i] = Argument($"gg1karg_{i}", Arguments.String());
+                top.Requires(s => s.IsHost);
             }
-
-            // register execute points, edge case for argless
-            if (command.lowerArgBound == 0)
+            if (command.useArgs)
             {
-                top.ExecutesLocal(ConvertExecute(command.method, 0));
+
+                var args = new RequiredArgumentBuilder<string>[command.upperArgBound];
                 for (var i = 0; i < command.upperArgBound; i++)
                 {
-                    args[i].ExecutesLocal(ConvertExecute(command.method, i + 1));
+                    args[i] = Argument($"gg1karg_{i}", Arguments.String());
                 }
+
+                // register execute points, edge case for argless
+                if (command.lowerArgBound == 0)
+                {
+                    top.ExecutesLocal(ConvertExecute(command.method, 0));
+                    for (var i = 0; i < command.upperArgBound; i++)
+                    {
+                        args[i].ExecutesLocal(ConvertExecute(command.method, i + 1));
+                    }
+                }
+                else
+                {
+                    for (var i = command.lowerArgBound - 1; i < command.upperArgBound; i++)
+                    {
+                        args[i].ExecutesLocal(ConvertExecute(command.method, i + 1));
+                    }
+                }
+
+                // chain the args in a single tree
+                for (var i = 1; i < args.Length; i++) args[i - 1].Then(args[i]);
+                if (args.Any()) top.Then(args.First());
             }
             else
             {
-                for (var i = command.lowerArgBound - 1; i < command.upperArgBound; i++)
-                {
-                    args[i].ExecutesLocal(ConvertExecute(command.method, i + 1));
-                }
+                Command execute = ctx => command.method(new[] { ctx.Nodes[0].Node.Name, ctx.Input });
+                top.Then(
+                    Argument("args", Arguments.GreedyString()).ExecutesLocal(execute)
+                ).ExecutesLocal(execute);
             }
-
-            // chain the args in a single tree
-            for (var i = 1; i < args.Length; i++) args[i - 1].Then(args[i]);
-            if (args.Any()) top.Then(args.First());
 
             var node = Dispatcher.Register(top);
 
