@@ -9,14 +9,16 @@ using Terrain.Packets;
 
 namespace Brigadier.Plugin
 {
-    [BepInPlugin(Guid, Name, Version), BepInDependency(gg1kommands_base.Main.GUID, BepInDependency.DependencyFlags.SoftDependency)]
+    [BepInPlugin(Guid, Name, Version)]
+    [BepInDependency(gg1kommands_base.Main.GUID, BepInDependency.DependencyFlags.SoftDependency)]
+    [BepInIncompatibility(BetterChat.Main.Guid)] // Brigadier implements everything of BetterChat
     public class Main : BaseUnityPlugin
     {
         public const string
             Name = "Brigadier",
             Author = "Terrain",
             Guid = $"{Author}.{Name}",
-            Version = "0.1.0.0";
+            Version = "0.1.1.0";
 
         internal readonly ManualLogSource log;
         internal readonly Harmony harmony;

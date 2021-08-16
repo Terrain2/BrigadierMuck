@@ -1,5 +1,6 @@
 using System;
 using System.Text;
+using Dawn;
 
 namespace Brigadier
 {
@@ -76,7 +77,7 @@ namespace Brigadier
         //     Value = value;
         // }
 
-        public Suggestion(Range range, T value, string tooltip = null) : this(range, value, value.ToString(), tooltip) { }
+        public Suggestion(Range range, T value, string tooltip = null) : this(range, value, ValueString.Of(value).ToString(), tooltip) { }
 
         public int CompareTo(Suggestion<T> other) => Value.CompareTo(other.Value);
 

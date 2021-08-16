@@ -1,5 +1,6 @@
 using System.Linq;
 using System.Threading.Tasks;
+using BepInEx;
 using Brigadier.Plugin;
 using Dawn;
 using static Brigadier.StaticUtils;
@@ -69,6 +70,11 @@ namespace Brigadier.Arguments
         }
         public override Task<Suggestions> ListSuggestions(CommandContext context, SuggestionsBuilder builder)
         {
+            if (builder.Remaining.IsNullOrWhiteSpace())
+            {
+                builder.Suggest("@");
+                builder.Suggest("#");
+            }
             foreach (var player in GameManager.players.Values)
             {
                 if (player.username.StartsWith(builder.RemainingLowercase))

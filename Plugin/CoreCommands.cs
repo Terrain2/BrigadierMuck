@@ -33,6 +33,19 @@ namespace Brigadier.Plugin
                         .ExecutesLocal(HelpSpecific)
                 ).ExecutesLocal(HelpList)
             );
+
+            Dispatcher.Register(Literal("test")
+                .Then(
+                    Argument("item", Arguments.InventoryItem())
+                        .Then(
+                            Argument("powerup", Arguments.Powerup())
+                                .Then(
+                                    Argument("mob", Arguments.MobType())
+                                        .ExecutesLocal(ctx => { })
+                                )
+                        )
+                )
+            );
         }
 
         public static void Seed(CommandContext ctx)

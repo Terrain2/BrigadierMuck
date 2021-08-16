@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Threading.Tasks;
 using BepInEx;
 using UnityEngine;
@@ -5,32 +6,35 @@ using static Brigadier.StaticUtils;
 
 namespace Brigadier.Arguments
 {
-    public class InventoryItemArgument : ArgumentType<InventoryItem>
+    public class MobTypeArgument : ArgumentType<MobType>
     {
-        public override InventoryItem Parse(StringScanner scanner)
+        public override MobType Parse(StringScanner scanner)
         {
             scanner.ParseStack.Push(scanner.Cursor);
             if (scanner.CanRead() && scanner.Next == '#')
             {
                 scanner.Skip();
-                if (ItemManager.Instance.allItems.TryGetValue(scanner.MatchParse<int>(IntegerRegex), out var item))
+                var id = scanner.MatchParse<int>(IntegerRegex);
+                if (id >= 0 && id < MobSpawner.Instance.allMobs.Length)
                 {
+                    var mob = MobSpawner.Instance.allMobs[id];
                     scanner.ParseStack.Pop();
-                    return item;
+                    return mob;
                 }
                 else
                 {
-                    throw scanner.MakeException("Unknown item ID");
+                    throw scanner.MakeException("Unknown mob ID");
                 }
             }
-            InventoryItem result = null;
+
+            MobType result = null;
             int max = 0;
-            foreach (var item in ItemManager.Instance.allItems.Values)
+            foreach (var mob in MobSpawner.Instance.allMobs)
             {
-                var name = ((Object)item).name;
+                var name = ((Object)mob).name;
                 if (name.Length > max && scanner.CanRead(name.Length) && scanner.Read(name.Length) == name)
                 {
-                    result = item;
+                    result = mob;
                     max = name.Length;
                 }
                 scanner.Cursor = scanner.ParseStack.Peek();
@@ -41,16 +45,19 @@ namespace Brigadier.Arguments
                 scanner.Skip(max);
                 return result;
             }
-            throw scanner.MakeException("Unknown item");
+            throw scanner.MakeException("Unknown mob");
         }
 
         public override Task<Suggestions> ListSuggestions(CommandContext context, SuggestionsBuilder builder)
         {
             if (builder.Remaining.StartsWith("#"))
             {
-                foreach (var item in ItemManager.Instance.allItems.Values)
+                foreach (var mob in MobSpawner.Instance.allMobs.ToHashSet())
                 {
-                    if ($"#{item.id}".StartsWith(builder.Remaining)) builder.Suggest(item.id, $"#{item.id}");
+                    if ($"#{mob.id}".StartsWith(builder.RemainingLowercase))
+                    {
+                        builder.Suggest(mob.id, $"#{mob.id}");
+                    }
                 }
                 return builder.BuildTask();
             }
@@ -58,10 +65,13 @@ namespace Brigadier.Arguments
             {
                 builder.Suggest("#");
             }
-            foreach (var item in ItemManager.Instance.allItems.Values)
+            foreach (var mob in MobSpawner.Instance.allMobs.ToHashSet())
             {
-                var name = ((Object)item).name;
-                if (name.ToLower().StartsWith(builder.RemainingLowercase)) builder.Suggest(name);
+                var name = ((ScriptableObject)mob).name;
+                if (name.ToLower().StartsWith(builder.RemainingLowercase))
+                {
+                    builder.Suggest(name);
+                }
             }
             return builder.BuildTask();
         }

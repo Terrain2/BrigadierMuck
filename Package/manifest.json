@@ -1,6 +1,6 @@
 {
     "name": "Brigadier",
-    "version_number": "0.1.0",
+    "version_number": "0.1.1",
     "website_url": "https://github.com/Terrain2/BrigadierMuck",
     "description": "Minecraft's command parser and dispatcher, ported to Muck.",
     "dependencies": [

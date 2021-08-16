@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Dawn;
 
 namespace Brigadier
 {
@@ -30,7 +31,7 @@ namespace Brigadier
 
         public SuggestionsBuilder Suggest<T>(T value, string text = null, string tooltip = null) where T : IComparable<T>, IEquatable<T>
         {
-            text ??= value.ToString();
+            text ??= ValueString.Of(value).ToString();
             if (text == Remaining) return this;
             Result.Add(new Suggestion<T>(Start..Input.Length, value, text, tooltip));
             return this;
